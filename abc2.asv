@@ -1,0 +1,142 @@
+clear all
+clc
+close all
+%此程序可研究有时滞的情况下固定耦合强度k时最大同步误差变化的情况
+global a1;
+global b1;
+global c1;
+global d1;
+global s1;
+global r1;
+global x01;
+global Iext1;
+
+global a2;
+global b2;
+global c2;
+global d2;
+global s2;
+global r2;
+global x02;
+
+global I0;
+global k;
+
+a1=1.0;
+b1=3.0;
+c1=1.0;
+d1=5.0;
+s1=4.0;
+r1=0.002;
+x01=-1.60;%x02=-1.6013
+Iext1=2;
+
+a2=1.0;
+b2=3.0;
+c2=1.0;
+d2=5.0;
+s2=4.0;
+r2=0.002;
+x02=-1.60;%x02=-1.6013
+I0=1.5;
+k=30;
+ddefun=@(t,y,z)[y(2)-a1*y(1)*y(1)*y(1)+b1*y(1)*y(1)+Iext1-y(3)+k*(z(4,1)-y(1));
+    c1-d1*y(1)*y(1)-y(2);
+    r1*s1*(y(1)-x01)-r1*y(3);
+    z(5)-a2*y(4)*y(4)*y(4)+b2*y(4)*y(4)+I0-y(6)+k*(z(1,1)-y(4));
+    c2-d2*y(4)*y(4)-y(5);
+    r2*s2*(y(4)-x02)-r2*y(6)];
+    % 定义时滞向量 —— lags
+    %lags = [0.2];
+    % 定义历史 —— history
+%     history =@(t)[t;exp(t)];
+    % 定义时间积分区间 —— tspan
+    tspan = [0:1/2048:3500];
+    sol=dde23(ddefun,[0.1],[0 0 0 0 0 0],tspan);
+%     figure;
+%     % plot(sol.x,sol.y)
+%     subplot(3,1,1)
+%     plot(t,y(1,:) )
+%     subplot(3,1,2)
+%     plot(sol.x,sol.y(2,:),'-.' )
+%     subplot(3,1,1)
+%     hold off
+%     title('时滞微分方程组');
+%     xlabel('time t');
+%     ylabel('solution y');
+%     legend('x1','x2');
+sol.y=(sol.y)';
+figure(1)
+subplot(2,2,1)
+plot(sol.x,sol.y(:,1))
+title('x1')
+hold on
+subplot(2,2,2)
+plot(sol.x,sol.y(:,2))
+title('y1')
+hold on
+subplot(2,2,3)
+plot(sol.x,sol.y(:,3))
+title('z1')
+hold on
+subplot(2,2,4)
+plot3(sol.y(:,1),sol.y(:,2),sol.y(:,3))
+title('x1 vs y1 vs z1')
+
+
+figure(2)
+subplot(2,2,1)
+plot(sol.x,sol.y(:,4))
+title('x2')
+hold on
+subplot(2,2,2)
+plot(sol.x,sol.y(:,5))
+title('y2')
+hold on
+subplot(2,2,3)
+plot(sol.x,sol.y(:,6))
+title('z2')
+hold on
+subplot(2,2,4)
+plot3(sol.y(:,4),sol.y(:,5),sol.y(:,6))
+title('x2 vs y2 vs z2')
+
+figure(3)
+subplot(2,2,1)
+plot(sol.y(:,1),sol.y(:,2))
+title('x1 vs y1')
+hold on
+subplot(2,2,2)
+plot(sol.y(:,1),sol.y(:,3))
+title('x1 vs z1')
+hold on
+subplot(2,2,3)
+plot(sol.y(:,2),sol.y(:,3))
+title('y1 vs z1')
+subplot(2,2,4)
+plot(sol.y(:,1),sol.y(:,4))
+title('x1 vs x2')
+
+
+figure(4)
+subplot(2,2,1)
+plot(sol.y(:,4),sol.y(:,5))
+title('x2 vs y2')
+hold on
+subplot(2,2,2)
+plot(sol.y(:,4),sol.y(:,6))
+title('x2 vs z2')
+hold on
+subplot(2,2,3)
+plot(sol.x,sol.y(:,5),sol.x,sol.y(:,6))
+title('y2 vs z2')
+subplot(2,2,4)
+plot(sol.x,sol.y(:,2),sol.x,sol.y(:,5))
+title('y1 vs y2')
+
+
+figure(5)
+plot(sol.x,sol.y(:,1)-sol.y(:,4))
+title('x1-x2')
+hold on 
+grid on

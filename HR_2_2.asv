@@ -1,0 +1,85 @@
+clear all
+clc
+close all
+%此程序可研究有时滞的情况下固定耦合强度k时最大同步误差变化的情况
+global a1;
+global b1;
+global c1;
+global d1;
+global s1;
+global r1;
+global x01;
+global Iext1;
+
+global a2;
+global b2;
+global c2;
+global d2;
+global s2;
+global r2;
+global x02;
+
+global I0;
+global k;
+
+a1=1.0;
+b1=3.0;
+c1=1.0;
+d1=5.0;
+s1=4.0;
+r1=0.0021;
+x01=-1.60;
+Iext1=1.5;
+
+a2=1.0;
+b2=3.0;
+c2=1.0;
+d2=5.0;
+s2=4.0;
+r2=0.0021;
+x02=-1.60;
+I0=2;
+k=10;
+
+ddefun=@(t,y,z)[y(2)-a1*y(1)*y(1)*y(1)+b1*y(1)*y(1)+Iext1-y(3)+k*(z(4,1)-y(1));
+    c1-d1*y(1)*y(1)-y(2);
+    r1*s1*(y(1)-x01)-r1*y(3);
+    z(5)-a2*y(4)*y(4)*y(4)+b2*y(4)*y(4)+I0-y(6)+k*(z(1,1)-y(4));
+    c2-d2*y(4)*y(4)-y(5);
+    r2*s2*(y(4)-x02)-r2*y(6)];
+
+% 定义时间积分区间 —— tspan
+tspan = [0:1000];
+sol=dde23(ddefun,[0.06],history,tspan);
+%将解矩阵转置
+sol.y=(sol.y)';
+
+for tao=0.01:0.01:3
+    ddefun=@(t,y,z)[z(2)-a1*z(1)*z(1)*z(1)+b1*z(1)*z(1)+Iext1-z(3)+k*(z(4,tao)-x(1));
+    c1-d1*z(1)*z(1)-z(2);...
+    r1*s1*(z(1)-x01)-r1*z(3);...
+    z(5)-a2*z(4)*z(4)*z(4)+b2*z(4)*z(4)+I0-z(6)+k*(z(1,tao)-z(4));...
+    c2-d2*z(4)*z(4)-z(5);...
+    r2*s2*(z(4)-x02)-r2*z(6)]
+    % 定义时滞向量 —— lags
+    lags = [tao];
+    % 定义历史 —— history
+    history =@(t)[t;exp(t)];
+    % 定义时间积分区间 —— tspan
+    tspan = [0:1/2048:1500];
+    sol=dde23(ddefun,lags,history,tspan);
+    e1=abs(z(:,1)-z(:,4));
+    e2=abs(z(:,2)-z(:,5));
+    e3=abs(z(:,3)-z(:,6));
+    err=(e1+e2+e3)/3;
+    % b=max(err);
+    % err1(round(10*k+1),2)=b;
+    b=max(err);
+    err1(round(100*tao),2)=b;
+end
+figure(4)
+plot(err1(:,1),err1(:,2),'r')
+xlabel('同步误差随时滞逐渐增加的变化趋势')
+ylabel('同步误差')
+hold on
+grid on
